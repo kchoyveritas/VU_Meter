@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>McIntosh VU Meter WebApp</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-glow bg-glow-1" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow-2" aria-hidden="true"></div>
+
+  <main class="app-shell">
+    <header class="top-bar">
+      <div>
+        <h1>McIntosh VU Meter</h1>
+        <p class="subtitle">20260603 Ver 0.9</p>
+      </div>
+      <div class="power-wrap">
+        <button id="powerBtn" class="btn power off" type="button">POWER OFF</button>
+        <span id="powerLed" class="power-led" aria-label="Power guard LED"></span>
+      </div>
+    </header>
+
+    <section class="meter-card">
+      <canvas id="meterCanvas" width="1200" height="520" aria-label="Stereo VU meter"></canvas>
+    </section>
+
+    <section class="controls" aria-label="Audio controls">
+      <label>
+        Input Source
+        <select id="sourceSelect">
+          <option value="demo">Demo Tone</option>
+          <option value="mic">Microphone</option>
+          <option value="file">Audio File</option>
+        </select>
+      </label>
+
+      <label id="fileWrap" class="hidden">
+        Audio File
+        <input id="audioFile" type="file" accept="audio/*" />
+      </label>
+
+      <label>
+        Sensitivity
+        <input id="sensitivity" type="range" min="0.5" max="4" step="0.05" value="1.8" />
+      </label>
+
+      <label>
+        Inertia
+        <input id="inertia" type="range" min="0.05" max="0.6" step="0.01" value="0.22" />
+      </label>
+
+      <label class="check">
+        <input id="holdMode" type="checkbox" />
+        Hold
+      </label>
+
+      <button id="playPauseBtn" class="btn" type="button" disabled>Play</button>
+    </section>
+
+    <p id="statusText" class="status">Power on and choose a source.</p>
+    <audio id="audioEl" preload="metadata" crossorigin="anonymous"></audio>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
