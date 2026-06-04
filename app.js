@@ -455,8 +455,8 @@
       ctx.clearRect(0, 0, w, h);
 
       const panelGrad = ctx.createLinearGradient(0, 0, 0, h);
-      panelGrad.addColorStop(0, "#94cde4");
-      panelGrad.addColorStop(1, "#78b3cb");
+      panelGrad.addColorStop(0, "#00b2fc");
+      panelGrad.addColorStop(1, "#009bf4");
       ctx.fillStyle = panelGrad;
       ctx.fillRect(0, 0, w, h);
 
