@@ -14,7 +14,7 @@
     <header class="top-bar">
       <div>
         <h1>VU Meter</h1>
-        <p class="subtitle">20260603 Ver 0.9</p>
+        <p class="subtitle">20260604 Ver 0.91</p>
       </div>
       <div class="power-wrap">
         <button id="powerBtn" class="btn power off" type="button">POWER OFF</button>
@@ -32,13 +32,19 @@
         <select id="sourceSelect">
           <option value="demo">Demo Tone</option>
           <option value="mic">Microphone</option>
+          <option value="system">System Audio</option>
           <option value="file">Audio File</option>
         </select>
       </label>
 
       <label id="fileWrap" class="hidden">
-        Audio File
-        <input id="audioFile" type="file" accept="audio/*" />
+        Audio Files
+        <input id="audioFile" type="file" accept="audio/*" multiple />
+      </label>
+
+      <label id="fileListWrap" class="hidden">
+        Loaded Files
+        <select id="audioFileList" size="3"></select>
       </label>
 
       <label>

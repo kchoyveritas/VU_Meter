@@ -134,6 +134,11 @@ input[type="range"] {
   width: 100%;
 }
 
+#audioFileList {
+  min-height: 6rem;
+  max-height: 10rem;
+}
+
 select,
 input[type="file"] {
   color: var(--text);

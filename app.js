@@ -8,7 +8,9 @@
       this.powerLed = document.getElementById("powerLed");
       this.sourceSelect = document.getElementById("sourceSelect");
       this.fileWrap = document.getElementById("fileWrap");
+      this.fileListWrap = document.getElementById("fileListWrap");
       this.audioFile = document.getElementById("audioFile");
+      this.audioFileList = document.getElementById("audioFileList");
       this.playPauseBtn = document.getElementById("playPauseBtn");
       this.sensitivitySlider = document.getElementById("sensitivity");
       this.inertiaSlider = document.getElementById("inertia");
@@ -23,6 +25,9 @@
       this.splitter = null;
       this.analysers = [null, null];
       this.buffers = [new Float32Array(2048), new Float32Array(2048)];
+      this.audioFiles = [];
+      this.currentFileIndex = 0;
+      this.audioObjectUrl = null;
 
       this.isPowered = false;
       this.isPlayingFile = false;
@@ -46,6 +51,7 @@
       this.powerBtn.addEventListener("click", () => this.togglePower());
       this.sourceSelect.addEventListener("change", () => this.handleSourceChange());
       this.audioFile.addEventListener("change", () => this.loadAudioFile());
+      this.audioFileList.addEventListener("change", async () => this.handleAudioFileSelection());
       this.playPauseBtn.addEventListener("click", () => this.togglePlayPause());
       this.inertiaSlider.addEventListener("input", () => {
         this.needleInertia = parseFloat(this.inertiaSlider.value);
@@ -167,6 +173,7 @@
 
     async handleSourceChange() {
       this.fileWrap.classList.toggle("hidden", this.sourceSelect.value !== "file");
+      this.fileListWrap.classList.toggle("hidden", this.sourceSelect.value !== "file" || !this.audioFiles.length);
       if (!this.isPowered) return;
 
       await this.ensureAudioContext();
@@ -175,6 +182,8 @@
       const source = this.sourceSelect.value;
       if (source === "mic") {
         await this.setupMicSource();
+      } else if (source === "system") {
+        await this.setupSystemAudioSource();
       } else if (source === "file") {
         await this.setupFileSource();
       } else {
@@ -229,6 +238,7 @@
     async setupFileSource() {
       if (!this.audioEl.src) {
         this.setStatus("Select an audio file first.");
+        return;
       }
 
       if (!this.mediaElementNode) {
@@ -240,6 +250,85 @@
       this.playPauseBtn.disabled = false;
       this.playPauseBtn.textContent = this.isPlayingFile ? "Pause" : "Play";
       this.setStatus("Audio file mode is ready.");
+    }
+
+    async setupSystemAudioSource() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        this.setStatus("System audio capture is not supported in this browser.");
+        return;
+      }
+
+      try {
+        let displayStream;
+        try {
+          displayStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: false });
+        } catch (firstErr) {
+          displayStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
+        }
+
+        this.stream = displayStream;
+        const systemNode = this.audioCtx.createMediaStreamSource(this.stream);
+        this.sourceNode = systemNode;
+        this.buildStereoAnalyserChain(systemNode, null, true);
+
+        this.playPauseBtn.disabled = true;
+        this.setStatus("System audio capture is active. 화면/탭 공유에서 오디오를 선택하세요.");
+      } catch (err) {
+        this.setStatus(`System audio capture failed: ${err.message}`);
+      }
+    }
+
+    async handleAudioFileSelection() {
+      const index = this.audioFileList.selectedIndex;
+      if (index < 0 || index >= this.audioFiles.length) return;
+      await this.setAudioFile(index);
+    }
+
+    updateAudioFileList() {
+      this.audioFileList.innerHTML = "";
+      this.audioFiles.forEach((file, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = file.name;
+        this.audioFileList.appendChild(option);
+      });
+      if (this.audioFiles.length > 0) {
+        this.audioFileList.selectedIndex = this.currentFileIndex;
+      }
+    }
+
+    async setAudioFile(index) {
+      const file = this.audioFiles[index];
+      if (!file) return;
+
+      if (this.audioObjectUrl) {
+        URL.revokeObjectURL(this.audioObjectUrl);
+      }
+      this.audioObjectUrl = URL.createObjectURL(file);
+      this.audioEl.src = this.audioObjectUrl;
+      this.currentFileIndex = index;
+      this.audioFileList.selectedIndex = index;
+      this.isPlayingFile = false;
+      this.playPauseBtn.textContent = "Play";
+      this.setStatus(`Loaded ${this.audioFiles.length} file(s). Selected: ${file.name}`);
+
+      if (this.isPowered && this.sourceSelect.value === "file") {
+        await this.setupFileSource();
+      }
+    }
+
+    async loadAudioFile() {
+      const files = this.audioFile.files ? Array.from(this.audioFile.files) : [];
+      if (!files.length) return;
+
+      this.audioFiles = files;
+      this.currentFileIndex = 0;
+      this.updateAudioFileList();
+      await this.setAudioFile(0);
+
+      if (this.audioFiles.length > 1) {
+        this.setStatus(`Loaded ${this.audioFiles.length} files. 첫 번째 파일이 자동 선택되었습니다.`);
+      }
     }
 
     async setupDemoSource() {
@@ -274,21 +363,6 @@
 
       this.playPauseBtn.disabled = true;
       this.setStatus("Demo tone is playing.");
-    }
-
-    async loadAudioFile() {
-      const file = this.audioFile.files && this.audioFile.files[0];
-      if (!file) return;
-
-      const objectUrl = URL.createObjectURL(file);
-      this.audioEl.src = objectUrl;
-      this.isPlayingFile = false;
-      this.playPauseBtn.textContent = "Play";
-      this.setStatus(`File loaded: ${file.name}`);
-
-      if (this.isPowered && this.sourceSelect.value === "file") {
-        await this.setupFileSource();
-      }
     }
 
     togglePlayPause() {
