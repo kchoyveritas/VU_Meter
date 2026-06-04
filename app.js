@@ -277,7 +277,7 @@
         this.buildStereoAnalyserChain(systemNode, null, true);
 
         this.playPauseBtn.disabled = true;
-        this.setStatus("System audio capture is active. Please choose audio in the screen/tab share dialog.");
+        this.setStatus("System audio capture is active.");
       } catch (err) {
         this.setStatus(`System audio capture failed: ${err.message}`);
       }
