@@ -260,10 +260,15 @@
 
       try {
         let displayStream;
+
         try {
-          displayStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: false });
-        } catch (firstErr) {
           displayStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
+        } catch (firstErr) {
+          try {
+            displayStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: false });
+          } catch (secondErr) {
+            displayStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
+          }
         }
 
         this.stream = displayStream;
@@ -272,7 +277,7 @@
         this.buildStereoAnalyserChain(systemNode, null, true);
 
         this.playPauseBtn.disabled = true;
-        this.setStatus("System audio capture is active. 화면/탭 공유에서 오디오를 선택하세요.");
+        this.setStatus("System audio capture is active. Please choose audio in the screen/tab share dialog.");
       } catch (err) {
         this.setStatus(`System audio capture failed: ${err.message}`);
       }
@@ -327,7 +332,7 @@
       await this.setAudioFile(0);
 
       if (this.audioFiles.length > 1) {
-        this.setStatus(`Loaded ${this.audioFiles.length} files. 첫 번째 파일이 자동 선택되었습니다.`);
+        this.setStatus(`Loaded ${this.audioFiles.length} files. The first file has been selected automatically.`);
       }
     }
 
